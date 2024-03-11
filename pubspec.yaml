@@ -37,7 +37,7 @@ dependencies:
     hive_flutter: ^1.1.0
     http: ^1.2.1
     signals: ^4.5.1
-    flutter_svg: ^2.0.10+1
+    universal_html: ^2.0.9
 
 dev_dependencies:
     flutter_test:

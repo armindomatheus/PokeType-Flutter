@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:poketype/connection/poke_api.dart';
 import 'package:signals/signals_flutter.dart';
@@ -26,12 +25,7 @@ class ControllerHome {
       );
     }
     int sortedGeneration =
-        1 + random.nextInt(generationMarkedNumber.value.length - 1 + 1);
-    print(pokemonIdsPerGeneration);
-    print(sortedGeneration);
-    print(generationMarkedNumber.value);
-    print(pokemonIdsPerGeneration[
-        generationMarkedNumber.value[sortedGeneration - 1] - 1]);
+        1 + random.nextInt(generationMarkedNumber.value.length - 1 + 1); //Sorteia uma das gerações marcadas pelo usuário
     return pokemonIdsPerGeneration[
         generationMarkedNumber.value[sortedGeneration - 1] - 1];
   }

@@ -6,6 +6,7 @@ import 'package:poketype/common/types.dart';
 import 'package:poketype/model/model_pokemon.dart';
 import 'package:poketype/design/controller_home.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:universal_html/html.dart' as html;
 
 class Home extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   ControllerHome controller = ControllerHome();
+  String feedBack = "";
   @override
   void initState() {
     super.initState();
@@ -27,7 +29,9 @@ class _HomeState extends State<Home> {
         drawer: Drawer(
           backgroundColor: Theme.of(context).colorScheme.background,
           surfaceTintColor: Colors.transparent,
-          width: MediaQuery.of(context).size.width * 0.5,
+          width: html.window.navigator.userAgent.contains("Mozilla") == true
+              ? MediaQuery.of(context).size.width * 0.15
+              : MediaQuery.of(context).size.width * 0.5,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -86,27 +90,30 @@ class _HomeState extends State<Home> {
             child: Padding(
               padding: const EdgeInsets.all(5),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _pokemon(),
-                  _buttonTypes(),
+                  Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Expanded(child: _buttonTypes())),
                 ],
               ),
             ),
           ),
         ),
-        bottomNavigationBar: ElevatedButton(
-          onPressed: () => controller.startGame(context),
-          child: const Text("Novo Jogo"),
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-            shape: BeveledRectangleBorder(
-              borderRadius: BorderRadius.circular(5),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(5),
+          child: ElevatedButton(
+            onPressed: () => controller.startGame(context),
+            child: const Text("Novo Jogo"),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
             ),
           ),
         ));
@@ -118,25 +125,55 @@ class _HomeState extends State<Home> {
         alignment: Alignment.center,
         children: [
           Positioned(
-            bottom: 50,
-            width: 250,
+            bottom: 90,
+            width: 350,
             child: _plataform(),
           ),
           Positioned(
-            top: 70,
+            top: 30,
             width: 200,
             child: _pokemonName(),
           ),
           Positioned(
-            child: _HUD(),
-            width: 270,
-            top: 100,
+            bottom: 60,
+            child: _textTypePokemon(),
           ),
           Positioned(
-            bottom: 103,
+            bottom: 60,
+            child: _textFeedBack(),
+          ),
+          Positioned(
+            child: _HUD(),
+            width: 270,
+            top: 60,
+          ),
+          Positioned(
+            bottom: 160,
             child: _pokemonImage(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _textFeedBack() {
+    return Text(
+      feedBack,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  Widget _textTypePokemon() {
+    return const Text(
+      "Qual o tipo do Pokémon?",
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -224,8 +261,10 @@ class _HomeState extends State<Home> {
   Widget _buttonTypes() {
     return GridView.count(
       shrinkWrap: true,
-      childAspectRatio: 3,
-      crossAxisCount: 3,
+      childAspectRatio:
+          html.window.navigator.userAgent.contains("Mozilla") == true ? 5 : 3,
+      crossAxisCount:
+          html.window.navigator.userAgent.contains("Mozilla") == true ? 6 : 3,
       mainAxisSpacing: 5,
       crossAxisSpacing: 5,
       padding: const EdgeInsets.all(0),
@@ -313,17 +352,20 @@ class _HomeState extends State<Home> {
       children: List.generate(
         difficulties.length,
         (index) {
-          return ElevatedButton(
-            onPressed: () => print("difficulty"),
-            child: Text(difficulties[index]),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          return Padding(
+            padding: const EdgeInsets.only(top: 3, bottom: 3),
+            child: ElevatedButton(
+              onPressed: () => print("difficulty"),
+              child: Text(difficulties[index]),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           );
