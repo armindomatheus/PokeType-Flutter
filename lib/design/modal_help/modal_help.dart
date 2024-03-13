@@ -98,7 +98,7 @@ class _ModalHelpState extends State<ModalHelp> {
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.secondary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
               textStyle:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
