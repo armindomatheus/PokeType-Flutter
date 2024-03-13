@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:poketype/design/view_home.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:poketype/design/poketype/view_poketype.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _checkIfFirstTimeUser();
   runApp(const MyApp());
+}
+
+_checkIfFirstTimeUser() async {
+  await Hive.initFlutter();
+  await Hive.deleteBoxFromDisk("settings");
+  final settingsBox = await Hive.openBox("settings");
+  bool isFirstTime = settingsBox.get("isFirstTime") ?? true;
+  if (isFirstTime == true) {
+    settingsBox.put("isFirstTime", isFirstTime);
+    Map<int, bool> generations =
+        Map.fromEntries(List.generate(8, (index) => MapEntry(index + 1, true)));
+    settingsBox.put("generations", generations);
+    settingsBox.put("difficulty", 1);
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -27,7 +44,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: Home(),
+      home: ViewPokeType(),
     );
   }
 }

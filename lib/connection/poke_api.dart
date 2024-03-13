@@ -17,16 +17,20 @@ class PokeAPI {
       "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, HEAD",
     });
     if (response.statusCode == 200) {
+      Pokemon.types.value.clear();
       var jsonResponse =
           convert.jsonDecode(response.body) as Map<String, dynamic>;
       Pokemon.name.value =
           _myFunctions.firstLetterUpperCase(jsonResponse["name"]);
       Pokemon.image.value =
           jsonResponse["sprites"]["other"]["showdown"]["front_default"];
-      Pokemon.type1.value = jsonResponse["types"][0]["type"]["name"];
-      Pokemon.type2.value = (jsonResponse["types"] as List).length > 1
-          ? jsonResponse["types"][1]["type"]["name"]
-          : "";
+      (jsonResponse["types"] as List).length > 1
+          ? Pokemon.types.value.addAll([
+              jsonResponse["types"][0]["type"]["name"],
+              jsonResponse["types"][1]["type"]["name"]
+            ])
+          : Pokemon.types.value
+              .addAll([jsonResponse["types"][0]["type"]["name"]]);
     } else {
       print(response.statusCode);
     }
