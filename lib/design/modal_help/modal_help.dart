@@ -24,7 +24,7 @@ class _ModalHelpState extends State<ModalHelp> {
       Padding(padding: EdgeInsets.all(12)),
       _subTitle("Dificuldades"),
       _content(
-        'Há três diferentes dificuldades: Há três diferentes dificuldades: fácil, normal (padrão) e díficil.',
+        'Há três diferentes dificuldades: fácil, normal (padrão) e díficil.',
         align: TextAlign.justify,
       ),
     ];
@@ -98,7 +98,7 @@ class _ModalHelpState extends State<ModalHelp> {
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Theme.of(context).colorScheme.secondary,
               foregroundColor: Colors.white,
               textStyle:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

@@ -10,7 +10,6 @@ void main() async {
 
 _checkIfFirstTimeUser() async {
   await Hive.initFlutter();
-  await Hive.deleteBoxFromDisk("settings");
   final settingsBox = await Hive.openBox("settings");
   bool isFirstTime = settingsBox.get("isFirstTime") ?? true;
   if (isFirstTime == true) {
