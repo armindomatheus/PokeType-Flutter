@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:poketype/common/global_functions.dart';
 
 class ModalHelp extends StatefulWidget {
   const ModalHelp({super.key});
@@ -10,6 +11,7 @@ class ModalHelp extends StatefulWidget {
 }
 
 class _ModalHelpState extends State<ModalHelp> {
+  final myFunctions = MyFunctions();
   @override
   Widget build(BuildContext context) {
     var children = [
@@ -19,7 +21,7 @@ class _ModalHelpState extends State<ModalHelp> {
       ),
       Image.asset(
         'assets/images/Types_help.png',
-        scale: 1.3,
+        scale: myFunctions.verifyIfIsWebPlataform() == true ? 1 : 1.3,
       ),
       Padding(padding: EdgeInsets.all(12)),
       _subTitle("Dificuldades"),
@@ -70,8 +72,9 @@ class _ModalHelpState extends State<ModalHelp> {
     ));
     return AlertDialog(
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      contentTextStyle: TextStyle(fontSize: 16),
+      titleTextStyle: const TextStyle(
+          fontWeight: FontWeight.bold, fontSize: 24, color: Colors.white),
+      contentTextStyle: const TextStyle(fontSize: 16, color: Colors.white),
       title: const Column(
         children: [
           Text(
@@ -84,8 +87,11 @@ class _ModalHelpState extends State<ModalHelp> {
         ],
       ),
       content: SingleChildScrollView(
-        child: ListBody(
-          children: children,
+        child: SizedBox(
+          width: 500,
+          child: ListBody(
+            children: children,
+          ),
         ),
       ),
       actionsOverflowAlignment: OverflowBarAlignment.center,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:universal_html/html.dart' as html;
 
 class MyFunctions {
   String firstLetterUpperCase(String text) {
@@ -11,6 +12,10 @@ class MyFunctions {
       builder: (context) => modal,
       barrierDismissible: barrierDismiss,
     );
+  }
+
+  bool verifyIfIsWebPlataform() {
+    return html.window.navigator.userAgent.contains("Mozilla");
   }
 
   void showSnackBar(BuildContext context, String content) {

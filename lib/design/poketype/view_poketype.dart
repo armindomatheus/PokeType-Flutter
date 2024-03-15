@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:poketype/common/colors.dart';
+import 'package:poketype/common/global_functions.dart';
 import 'package:poketype/common/types.dart';
 import 'package:poketype/model/model_pokemon.dart';
 import 'package:poketype/design/poketype/controller_poketype.dart';
 import 'package:signals/signals_flutter.dart';
-import 'package:universal_html/html.dart' as html;
 
 class ViewPokeType extends StatefulWidget {
   @override
@@ -15,6 +15,7 @@ class ViewPokeType extends StatefulWidget {
 }
 
 class _ViewPokeTypeState extends State<ViewPokeType> {
+  final myFunctions = MyFunctions();
   ControllerPokeType controller = ControllerPokeType();
   @override
   void initState() {
@@ -87,7 +88,7 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
     return Drawer(
       backgroundColor: Theme.of(context).colorScheme.background,
       surfaceTintColor: Colors.transparent,
-      width: html.window.navigator.userAgent.contains("Mozilla") == true
+      width: myFunctions.verifyIfIsWebPlataform() == true
           ? MediaQuery.of(context).size.width * 0.2
           : MediaQuery.of(context).size.width * 0.5,
       child: Column(
@@ -377,12 +378,18 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
             width: 300 * (ControllerPokeType.pokemonHP.watch(context) / 100),
             height: 20.0,
             decoration: BoxDecoration(
-              color: ControllerPokeType.pokemonHP.watch(context) == 100
-                  ? Colors.green
-                  : ControllerPokeType.pokemonHP.watch(context) == 50
-                      ? Colors.yellow
-                      : Colors
-                          .red, // Cor da barra de HP dependendo do percentual
+              gradient: LinearGradient(
+                colors: _getGradientColors(
+                    ControllerPokeType.pokemonHP.watch(context) / 100),
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              // color: ControllerPokeType.pokemonHP.watch(context) == 100
+              //     ? Colors.green
+              //     : ControllerPokeType.pokemonHP.watch(context) == 50
+              //         ? Colors.yellow
+              //         : Colors
+              //             .red, // Cor da barra de HP dependendo do percentual
               borderRadius: BorderRadius.circular(10.0), // Borda arredondada
             ),
           ),
@@ -462,10 +469,8 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
   Widget _buttonTypes() {
     return GridView.count(
       shrinkWrap: true,
-      childAspectRatio:
-          html.window.navigator.userAgent.contains("Mozilla") == true ? 5 : 3,
-      crossAxisCount:
-          html.window.navigator.userAgent.contains("Mozilla") == true ? 6 : 3,
+      childAspectRatio: myFunctions.verifyIfIsWebPlataform() == true ? 5 : 3,
+      crossAxisCount: myFunctions.verifyIfIsWebPlataform() == true ? 6 : 3,
       mainAxisSpacing: 5,
       crossAxisSpacing: 5,
       padding: const EdgeInsets.all(0),
@@ -544,5 +549,17 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
         ),
       ),
     );
+  }
+
+  List<Color> _getGradientColors(double percentage) {
+    if (percentage == 1) {
+      return [Colors.greenAccent, Colors.green];
+    } else if (percentage >= 0.75) {
+      return [Colors.yellow, Colors.green];
+    } else if (percentage >= 0.5) {
+      return [Colors.orange, Colors.yellow];
+    } else {
+      return [Colors.red, Colors.orange];
+    }
   }
 }

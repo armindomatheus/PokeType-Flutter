@@ -17,9 +17,8 @@ class ControllerPokeType {
   static var indexCorrectType = signal([-1, -1]);
   static var numberOfTries = signal(3);
   static var numberOfPoints = signal(0);
-  static var generationsMarked =
-      signal(Hive.box("settings").get("generations") as Map);
-
+  static Signal<Map<int, bool>> generationsMarked =
+      signal(Hive.box("settings").get("generations") as Map<int, bool>);
   final _myFunctions = MyFunctions();
   final _pokeAPI = PokeAPI();
   final Map<String, List> _pokedexGenerationNumbers = {
@@ -64,7 +63,7 @@ class ControllerPokeType {
       BuildContext context, String text, bool win) async {
     buttonState.value = false;
     feedBackText.value = text;
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 3));
     feedBackText.value = "Sorteando um novo Pokemon!";
     await Future.delayed(
       const Duration(seconds: 3),
