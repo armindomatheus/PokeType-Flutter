@@ -1,32 +1,61 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:poketype/common/global_functions.dart';
 import 'package:poketype/common/types.dart';
 import 'package:poketype/connection/poke_api.dart';
 import 'package:poketype/design/modal_help/modal_help.dart';
+import 'package:poketype/design/poketype/drawer/controller_poketype_drawer.dart';
 import 'package:poketype/model/model_pokemon.dart';
 import 'package:signals/signals_flutter.dart';
 
 class ControllerPokeType {
   static var feedBackText = signal("");
   static var pokemonHP = signal(100);
-  static var selectedDifficulty =
-      signal(Hive.box("settings").get("difficulty"));
   static var buttonState = signal(true);
   static var indexCorrectType = signal([-1, -1]);
   static var numberOfTries = signal(3);
   static var numberOfPoints = signal(0);
-  static Signal<Map<int, bool>> generationsMarked =
-      signal(Hive.box("settings").get("generations") as Map<int, bool>);
   final _myFunctions = MyFunctions();
   final _pokeAPI = PokeAPI();
-  final Map<String, List> _pokedexGenerationNumbers = {
+
+  final Map<String, List> _pokedexIndices = {
     "start": [1, 152, 252, 387, 494, 650, 722, 808],
     "end": [151, 251, 386, 493, 649, 721, 807, 905],
   };
+  final List<int> _start = [1, 152, 252, 387, 494, 650, 722, 808];
+  final List<int> _end = [151, 251, 386, 493, 649, 721, 807, 905];
+  final Map<int, List<int>> _pokedexGenerationsNumebesNew = {
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+  };
+  Map<int, int> _pokemonIndexPerGeneration = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0
+  };
 
-  void startGame(BuildContext context, bool win) {
+  _teste() {
+    // gera e embaralha os indices dos pokemons de cada intervalo de geração
+    for (int i = 1; i <= 8; i++) {
+      for (int j = _start[i - 1]; j <= _end[i - 1]; j++) {
+        _pokedexGenerationsNumebesNew[i]?.add(j);
+      }
+      _pokedexGenerationsNumebesNew[i]?.shuffle(Random());
+    }
+  }
+
+  startGame(BuildContext context, bool win) async {
     if (win == false) {
       numberOfPoints.value = 0;
     }
@@ -35,25 +64,35 @@ class ControllerPokeType {
     indexCorrectType.value[0] = -1;
     indexCorrectType.value[1] = -1;
     numberOfTries.value = 3;
+    _teste();
     _pokeAPI.getPokemon(_sortPokemonId());
     buttonState.value = true;
   }
 
   int _sortPokemonId() {
     List<int> pokemonIdsPerGeneration = [];
-    Random random = Random();
-    for (int i = 0; i < 8; i++) {
-      pokemonIdsPerGeneration.add(
-        _pokedexGenerationNumbers["start"]?[i] +
-            random.nextInt(_pokedexGenerationNumbers["end"]?[i] -
-                _pokedexGenerationNumbers["start"]?[i] +
-                1),
-      );
-    }
-    List generationsMarkedTrue = generationsMarked.value.entries
+    int pokemonIndex = 0;
+    List generationsMarkedTrue = ControllerPokeTypeDrawer
+        .generationsMarked.value.entries
         .where((entry) => entry.value == true)
         .map((entry) => entry.key)
         .toList();
+    Random random = Random();
+    int generationSorted =
+        generationsMarkedTrue[random.nextInt(generationsMarkedTrue.length)];
+    pokemonIndex = _pokedexGenerationsNumebesNew[generationSorted]![
+        _pokemonIndexPerGeneration[generationSorted]!];
+    _pokemonIndexPerGeneration[generationSorted] =
+        _pokemonIndexPerGeneration[generationSorted]! + 1;
+    print(pokemonIndex);
+    return pokemonIndex;
+    for (int i = 0; i < 8; i++) {
+      pokemonIdsPerGeneration.add(
+        _pokedexIndices["start"]?[i] +
+            random.nextInt(
+                _pokedexIndices["end"]?[i] - _pokedexIndices["start"]?[i] + 1),
+      );
+    }
     return pokemonIdsPerGeneration[
         (generationsMarkedTrue[random.nextInt(generationsMarkedTrue.length)]) -
             1];
@@ -71,32 +110,8 @@ class ControllerPokeType {
     );
   }
 
-  saveSettings(bool isOpened, BuildContext context) {
-    if (isOpened == false) {
-      _myFunctions.showSnackBar(
-          context, "Para aplicar as configurações clique em novo jogo!");
-      Hive.box("settings").put("generations", generationsMarked.value);
-      Hive.box("settings").put("difficulty", selectedDifficulty.value);
-    }
-  }
-
   onClickIconButtonHelp(BuildContext context) {
     _myFunctions.showModal(ModalHelp(), context);
-  }
-
-  onClickDifficultyButton(int index) {
-    selectedDifficulty.value = index;
-  }
-
-  onChangedGeneration(bool? value, int index) {
-    if (ControllerPokeType.generationsMarked.value.values
-                .where((element) => element == true)
-                .length >
-            1 ||
-        value == true) {
-      ControllerPokeType.generationsMarked.value
-          .addAll({index + 1: value as bool});
-    }
   }
 
   Future<void> onClickTypeButton(
@@ -104,7 +119,6 @@ class ControllerPokeType {
     if (Pokemon.types.value.contains(type)) {
       // verifica se o tipo clicado é o do pokemon
       if (Pokemon.types.value.length == 1) {
-        Pokemon.image.value = "";
         // caso o pokemon só tem 1 tipo
         _sortNewPokemon(
           context,
@@ -118,7 +132,6 @@ class ControllerPokeType {
         // caso o pokemon tenha 2 tipos
         if (indexCorrectType.value[0] > -1) {
           // caso já tenha acertado 1 tipo
-          Pokemon.image.value = "";
           _sortNewPokemon(
             context,
             "Acertou! o Pokemon era do tipo: ${Types.types[Pokemon.types.value[0]]} e ${Types.types["${Pokemon.types.value[1]}"]}",

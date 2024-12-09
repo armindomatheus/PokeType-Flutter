@@ -11,11 +11,11 @@ class PokeAPI {
     var url = Uri.parse(
       "https://pokeapi.co/api/v2/pokemon/$pokemonId",
     );
-
     var response = await http.get(url, headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE, HEAD",
-    });
+    }).catchError(
+        () => print("Erro ao consultar API")); // Tratar com alertDialog
     if (response.statusCode == 200) {
       Pokemon.types.value.clear();
       var jsonResponse =

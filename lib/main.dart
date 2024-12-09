@@ -9,11 +9,12 @@ void main() async {
 }
 
 _checkIfFirstTimeUser() async {
+  //verifica se é a primeira vez que o usuário abre o aplicativo
   await Hive.initFlutter();
-  await Hive.deleteBoxFromDisk("settings");
   final settingsBox = await Hive.openBox("settings");
   bool isFirstTime = settingsBox.get("isFirstTime") ?? true;
   if (isFirstTime == true) {
+    // se for primeira vez ele marca seta as configurações padrões
     settingsBox.put("isFirstTime", isFirstTime);
     Map<int, bool> generations =
         Map.fromEntries(List.generate(8, (index) => MapEntry(index + 1, true)));
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
           onError: Colors.white,
           background: Color(0xFF202124),
           onBackground: Colors.white,
-          surface: Color(0xFF595959),
+          surface: Color(0xFF202124),
           onSurface: Colors.white,
         ),
         useMaterial3: true,

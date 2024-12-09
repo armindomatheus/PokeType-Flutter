@@ -5,6 +5,8 @@ import 'package:hive/hive.dart';
 import 'package:poketype/common/colors.dart';
 import 'package:poketype/common/global_functions.dart';
 import 'package:poketype/common/types.dart';
+import 'package:poketype/design/poketype/drawer/controller_poketype_drawer.dart';
+import 'package:poketype/design/poketype/drawer/view_poketype_drawer.dart';
 import 'package:poketype/model/model_pokemon.dart';
 import 'package:poketype/design/poketype/controller_poketype.dart';
 import 'package:signals/signals_flutter.dart';
@@ -14,13 +16,17 @@ class ViewPokeType extends StatefulWidget {
   State<ViewPokeType> createState() => _ViewPokeTypeState();
 }
 
-class _ViewPokeTypeState extends State<ViewPokeType> {
+class _ViewPokeTypeState extends State<ViewPokeType>
+    with SingleTickerProviderStateMixin {
   final myFunctions = MyFunctions();
   ControllerPokeType controller = ControllerPokeType();
+  late AnimationController _controllerAnimation;
+  late Animation<Color?> _colorAnimation;
+  bool _animationPlaying = false;
+
   @override
   void initState() {
     super.initState();
-    controller.startGame(context, false);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {
         controller.startGame(context, false);
@@ -30,13 +36,64 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
         }
       },
     );
+
+    // Configura o controlador da animação
+    _controllerAnimation = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+    _colorAnimation = ColorTween(
+      begin: Colors.red,
+      end: const Color.fromARGB(255, 229, 131, 124),
+    ).animate(_controllerAnimation);
+
+    _controllerAnimation.addStatusListener((status) {
+      if (status == AnimationStatus.forward) {
+        print("inicou a animação");
+        setState(() {
+          _animationPlaying = true; // Marca que a animação terminou
+        });
+      }
+    });
+    _colorAnimation.addStatusListener(
+      (status) {
+        if (status == AnimationStatus.completed) {
+          print("completou a animação");
+          setState(() {
+            _animationPlaying = false;
+          });
+        }
+      },
+    );
+    // Inicia a animação
+  }
+
+  _vfxPokemonDamage() {
+    // Define a animação de cor
+    _controllerAnimation.forward();
+  }
+
+  void _onTapButtonTypes(int index) {
+    ControllerPokeType.indexCorrectType.value.contains(index) == true ||
+            ControllerPokeType.buttonState.watch(context) == false
+        ? null
+        : controller.onClickTypeButton(
+            Types.types.keys.elementAt(index),
+            context,
+            index,
+          );
+    if (ControllerPokeType.pokemonHP.value < 100) {
+      print("entrou");
+      _vfxPokemonDamage();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      onDrawerChanged: (isOpened) => controller.saveSettings(isOpened, context),
-      drawer: _drawer(),
+      onDrawerChanged: (isOpened) =>
+          ControllerPokeTypeDrawer().saveSettings(isOpened, context),
+      drawer: ViewPoketypeDrawer(),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -51,7 +108,9 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
             child: Column(
               children: [
                 _pokemon(),
-                Align(alignment: Alignment.bottomCenter, child: _buttonTypes()),
+                Align(
+                    alignment: Alignment.bottomCenter,
+                    child: _gridViewButtonTypes()),
               ],
             ),
           ),
@@ -82,126 +141,6 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
         iconSize: 30,
       ),
     ];
-  }
-
-  Widget _drawer() {
-    return Drawer(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      surfaceTintColor: Colors.transparent,
-      width: myFunctions.verifyIfIsWebPlataform() == true
-          ? MediaQuery.of(context).size.width * 0.2
-          : MediaQuery.of(context).size.width * 0.5,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: _textDrawerGenerations(),
-          ),
-          _checkBoxGenerations(),
-          const Divider(
-            color: Colors.white,
-            indent: 10,
-            endIndent: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: _textDrawerDifficulty(),
-          ),
-          _buttonsDifficulty(),
-        ],
-      ),
-    );
-  }
-
-  Widget _textDrawerGenerations() {
-    return const Text(
-      "Geração",
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Widget _checkBoxGenerations() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      shrinkWrap: true,
-      children: List.generate(
-        8,
-        (index) {
-          return CheckboxListTile(
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: const EdgeInsets.all(3),
-            visualDensity: VisualDensity.compact,
-            activeColor: Theme.of(context).colorScheme.secondary,
-            title: Text(
-              "Geração ${index + 1}",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            value:
-                ControllerPokeType.generationsMarked.watch(context)[index + 1],
-            onChanged: (value) => setState(() {
-              controller.onChangedGeneration(value, index);
-            }),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _textDrawerDifficulty() {
-    return const Text(
-      "Dificuldade",
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Widget _buttonsDifficulty() {
-    List<String> difficulties = ["Fácil", "Médio", "Difícil"];
-    return ListView(
-      padding: const EdgeInsets.all(10),
-      shrinkWrap: true,
-      children: List.generate(
-        difficulties.length,
-        (index) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 3, bottom: 3),
-            child: Opacity(
-              opacity:
-                  ControllerPokeType.selectedDifficulty.watch(context) == index
-                      ? 0.4
-                      : 1,
-              child: ElevatedButton(
-                onPressed: () =>
-                    ControllerPokeType.selectedDifficulty.watch(context) ==
-                            index
-                        ? null
-                        : controller.onClickDifficultyButton(index),
-                child: Text(difficulties[index]),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Widget _pokemon() {
@@ -348,7 +287,7 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
       children: [
         Positioned(
           child: _pokemonHP(),
-          width: 270,
+          width: MediaQuery.of(context).size.width - 150,
           top: 30,
         ),
         Positioned(
@@ -363,11 +302,9 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 1000),
       curve: Curves.easeInOut,
-      width: 200.0, // Largura da barra de HP
-      height: 20.0, // Altura da barra de HP
       decoration: BoxDecoration(
         color: Colors.grey[300], // Cor de fundo da barra de HP
-        borderRadius: BorderRadius.circular(10.0), // Borda arredondada
+        borderRadius: BorderRadius.circular(10.0),
       ),
       child: Stack(
         children: [
@@ -378,30 +315,25 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
             width: 300 * (ControllerPokeType.pokemonHP.watch(context) / 100),
             height: 20.0,
             decoration: BoxDecoration(
+              // Cor da barra de HP dependendo do percentual
               gradient: LinearGradient(
                 colors: _getGradientColors(
                     ControllerPokeType.pokemonHP.watch(context) / 100),
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              // color: ControllerPokeType.pokemonHP.watch(context) == 100
-              //     ? Colors.green
-              //     : ControllerPokeType.pokemonHP.watch(context) == 50
-              //         ? Colors.yellow
-              //         : Colors
-              //             .red, // Cor da barra de HP dependendo do percentual
-              borderRadius: BorderRadius.circular(10.0), // Borda arredondada
+              borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          // Texto mostrando a quantidade de HP
           Positioned.fill(
             child: Center(
               child: Text(
                 '${ControllerPokeType.pokemonHP.watch(context)}/100', // Texto mostrando HP atual e máximo
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: "pokemon"),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "pokemon",
+                ),
               ),
             ),
           ),
@@ -411,26 +343,39 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
   }
 
   Widget _pokemonImage() {
-    return Pokemon.image.watch(context) == ""
-        ? Container()
-        : Image.network(
-            scale: 0.6,
-            fit: BoxFit.none,
-            filterQuality: FilterQuality.high,
-            isAntiAlias: true,
-            loadingBuilder: (context, child, loadingProgress) =>
-                loadingProgress == null
-                    ? child
-                    : const Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
+    print(Pokemon.image.watch(context));
+    return Pokemon.image.value == ""
+        ? const SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+            ),
+          )
+        : AnimatedBuilder(
+            animation: _colorAnimation,
+            builder: (context, child) {
+              return Image.network(
+                scale: 0.6,
+                fit: BoxFit.none,
+                filterQuality: FilterQuality.high,
+                isAntiAlias: true,
+                colorBlendMode:
+                    _animationPlaying == true ? BlendMode.modulate : null,
+                color: _animationPlaying == true ? _colorAnimation.value : null,
+                loadingBuilder: (context, child, loadingProgress) =>
+                    loadingProgress == null
+                        ? child
+                        : const SizedBox(
+                            width: 60,
+                            height: 60,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ),
-            Pokemon.image.watch(context),
+                Pokemon.image.watch(context),
+              );
+            },
           );
   }
 
@@ -466,7 +411,7 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
     );
   }
 
-  Widget _buttonTypes() {
+  Widget _gridViewButtonTypes() {
     return GridView.count(
       shrinkWrap: true,
       childAspectRatio: myFunctions.verifyIfIsWebPlataform() == true ? 5 : 3,
@@ -476,60 +421,61 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
       padding: const EdgeInsets.all(0),
       children: List.generate(
         18,
-        (index) {
-          return Opacity(
-            opacity:
-                ControllerPokeType.indexCorrectType.value.contains(index) ==
-                        true
-                    ? 0.3
-                    : 1,
-            child: ElevatedButton.icon(
-              onPressed: () =>
-                  ControllerPokeType.indexCorrectType.value.contains(index) ==
-                              true ||
-                          ControllerPokeType.buttonState.watch(context) == false
-                      ? null
-                      : controller.onClickTypeButton(
-                          Types.types.keys.elementAt(index),
-                          context,
-                          index,
-                        ),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(0),
-                backgroundColor:
-                    MyColors.colorTypes[Types.types.keys.elementAt(index)],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 1,
-                  ),
-                ),
-                foregroundColor: Colors.white,
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              icon: Padding(
-                padding: const EdgeInsets.only(left: 5),
-                child: Image.asset(
-                  "assets/icons/${Types.types.keys.elementAt(index)}.png",
-                  width: 30,
-                  filterQuality: FilterQuality.high,
-                  isAntiAlias: true,
-                ),
-              ),
-              label: SizedBox(
-                width: 100,
-                child: Text(
-                  textAlign: TextAlign.left,
-                  Types.types.values.elementAt(index),
-                ),
-              ),
-            ),
-          );
-        },
+        (index) => Opacity(
+          opacity: ControllerPokeType.indexCorrectType.value.contains(index) ==
+                  true //Deixa opaco elementos que já foram usados
+              ? 0.3
+              : 1,
+          child: _buttonTypes(
+            index,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buttonTypes(int index) {
+    return ElevatedButton.icon(
+      onPressed: () => _onTapButtonTypes(index),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.all(0),
+        backgroundColor: MyColors.colorTypes[Types.types.keys.elementAt(index)],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+      icon: Padding(
+        padding: const EdgeInsets.only(left: 5),
+        child: _buttonTypesIcon(index),
+      ),
+      label: _buttonTypesLabel(index),
+    );
+  }
+
+  Widget _buttonTypesIcon(int index) {
+    return Image.asset(
+      "assets/icons/${Types.types.keys.elementAt(index)}.png",
+      width: 30,
+      filterQuality: FilterQuality.high,
+      isAntiAlias: true,
+    );
+  }
+
+  Widget _buttonTypesLabel(int index) {
+    return SizedBox(
+      width: 100,
+      child: FittedBox(
+        alignment: Alignment.centerLeft,
+        fit: BoxFit.scaleDown,
+        child: Text(
+          Types.types.values.elementAt(index),
+          textAlign: TextAlign.left,
+        ),
       ),
     );
   }
@@ -539,6 +485,7 @@ class _ViewPokeTypeState extends State<ViewPokeType> {
       onPressed: () => controller.startGame(context, false),
       child: const Text("Novo Jogo"),
       style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFF595959),
         foregroundColor: Colors.white,
         textStyle: const TextStyle(
           fontWeight: FontWeight.bold,
