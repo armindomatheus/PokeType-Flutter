@@ -26,7 +26,7 @@ class _ModalHelpState extends State<ModalHelp> {
       Padding(padding: EdgeInsets.all(12)),
       _subTitle("Dificuldades"),
       _content(
-        'Há três diferentes dificuldades: Há três diferentes dificuldades: fácil, normal (padrão) e díficil.',
+        'Há três diferentes dificuldades: fácil, normal (padrão) e díficil.',
         align: TextAlign.justify,
       ),
     ];
